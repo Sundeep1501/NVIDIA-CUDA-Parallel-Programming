@@ -1,102 +1,120 @@
-// very simple vector add example discussed in class
-// --everything is in one *.cpp program
-// --no error checking; not a good idea
-
-using namespace std;
 #include <iostream>
+#include <stdlib.h>
+#include <sstream>
+#include <iomanip>
+using namespace std;
 
-#define TILE_WIDTH 256
+#define iceil(num,den) (num+den-1)/den
 
-// iceil macro
-// returns an integer ceil value where integer numerator is first parameter
-// and integer denominator is the second parameter. iceil is the rounded
-// up value of numerator/denominator when there is a remainder
-// equivalent to ((num%den!=0) ? num/den+1 : num/den)
-#define iceil(num,den) (num+den-1)/den 
+//Kernel Function
+__global__ void imgMulKernel(float* d_img_in, float* d_img_out, int w, int h, float *d_img_fin, int fw, int fh){
+	
+	//Access the pixel on the image
+	int c = blockDim.x * blockIdx.x + threadIdx.x;
+	int r = blockDim.y * blockIdx.y + threadIdx.y;
+	
+	//Ignore border elements
+	if(r == 0 || r == h-1 || c == 0 || c == w-1)
+		return;
 
-// Basic CPU based vecAdd C = A+B implementation
-// Replaced by GPU function with identical name
-// (commented out here!)
-/*
-void vecAdd (float *A, float *B, float *C, int n) {
-   int i;
-   for (i=0;i<n;i++) C[i] = A[i] + B[i];
-}
-*/
+	//Check if the index is in the image 
+	if(c < w && r < h){
+		int tl = d_img_in[(r-1)*w + (c-1)] * d_img_fin[0*fw + 0];
+		int tc = d_img_in[(r-1)*w + (c)] * d_img_fin[0*fw + 1];
+		int tr = d_img_in[(r-1)*w + (c+1)] * d_img_fin[0*fw + 2];
 
+		int ml = d_img_in[r*w + (c-1)] * d_img_fin[1*fw + 0];
+		int mc = d_img_in[r*w + c] * d_img_fin[1*fw + 1];
+		int mr = d_img_in[r*w + (c+1)] * d_img_fin[1*fw + 2];
+		
+		int bl = d_img_in[(r+1)*w + (c-1)] * d_img_fin[2*fw + 0];
+		int bc = d_img_in[(r+1)*w + (c)] * d_img_fin[2*fw + 1];
+		int br = d_img_in[(r+1)*w + (c+1)] * d_img_fin[2*fw + 2];
 
-// GPU Vector Add kernel
-__global__ void vectAddKernel(float *A, float *B, float *C, int N) {
-   int i = blockDim.x*blockIdx.x+threadIdx.x;
-   
-   if (i<N) C[i] = A[i]+B[i];
-}
-
-// GPU Vector Add Function
-void vecAdd(float *A, float *B, float *C, int N) {
-
-   int size = N*sizeof(float);
-
-   // allocate device (GPU) memory
-   float *d_A,*d_B,*d_C;
-
-   // Allocate device memory and Transfer host arrays A and B 
-   cudaMalloc((void **) &d_A,  size);
-   cudaMemcpy(d_A, A,  size, cudaMemcpyHostToDevice);
-
-   cudaMalloc((void **) &d_B,  size);
-   cudaMemcpy(d_B, B,  size, cudaMemcpyHostToDevice);
-
-   // Allocate device memory of P array for results
-   cudaMalloc((void **) &d_C,  size);
-
-   // Setup the kernel execution configuration parameters
-   // & Launch Kernel!
-   vectAddKernel <<<iceil(N,TILE_WIDTH),TILE_WIDTH>>> (d_A,d_B,d_C,N);
-   cudaError_t error_id=cudaGetLastError();
-   if (error_id != cudaSuccess) {
-      cout << "Attempted Launch of MatriMulKernel returned " << 
-          (int)error_id  << endl;
-      cout <<  cudaGetErrorString(error_id) << endl ;
-      exit(EXIT_FAILURE);
-   }
-
-   // Transfer Vector C from device to host
-   cudaMemcpy(C,d_C, size,cudaMemcpyDeviceToHost);
-
-   // Free device matrices
-   cudaFree(d_A);
-   cudaFree(d_B);
-   cudaFree(d_C);
+		int sum = tl + tc + tr + ml + mc + mr + bl + bc + br;
+		
+		d_img_out[r*w + c] = sum/9;
+		//d_img_out[row*w + col] = d_img_in[row*w + col] * 2;
+	}
 }
 
+void imgMul(float*img_in, float* img_out, int w, int h, float *img_fin, int fw, int fh) {
+	
+	//This number of bytes are going be allocated and transferred
+	int size = w * h * sizeof(float);
+	int fsize = fw * fh * sizeof(float);
 
-int main (int argc, char **argv) {
-  
-   int N;
+	float *d_img_in, *d_img_out, *d_img_fin;
 
-   if (argc != 2) {
-      cout << "usage: vectoradd <vector size>" << endl;
-      exit(1);
-   }
+	//Allocate memory from GPU for my input and output array
+	cudaMalloc((void**)&d_img_in, size);
+	cudaMalloc((void**)&d_img_out, size);
+	cudaMalloc((void**)&d_img_fin, fsize);
 
-   N = atoi(argv[1]);
- 
-   // allocate and initialize host (CPU) memory
-   float *A = new float[N];   
-   float *B = new float[N]; 
-   float *C = new float[N];
+	//Transfer data to the GPU
+	cudaMemcpy(d_img_in, img_in, size, cudaMemcpyHostToDevice);
+	cudaMemcpy(d_img_fin, img_fin, fsize, cudaMemcpyHostToDevice);
 
-   // intialize the two vectors
-   for (int i=0;i<N;i++) A[i]=B[i]=(float) i;
+	dim3 myBlockDim(16, 16, 1);
+	dim3 myGridDim(iceil(w, 16), iceil(h, 16), 1);
+	//Kernel Launch
+	imgMulKernel <<<myGridDim, myBlockDim >>> (d_img_in, d_img_out, w, h, d_img_fin, fw, fh);
 
-   // Execute Vector Add Functions
-   vecAdd(A, B, C, N);
+	//Transfer results back to CPU
+	cudaMemcpy(img_out, d_img_out, size, cudaMemcpyDeviceToHost);
 
-   // Output Results
-   for (int i=0;i<N;i++) cout << "C[" << i << "]=" << C[i] << endl;
-
-   free(A); free(B); free(C);
+	cudaFree(d_img_in);
+	cudaFree(d_img_out);
 }
 
+std::string to_format(const int number) {
+    std::stringstream ss;
+    ss << std::setw(2) << std::setfill(' ') << number;
+    return ss.str();
+}
 
+//Prints the image on screen
+void printImage(float* img, int w, int h) {
+	for (int i = 0; i < h; i++) {
+		for (int j = 0; j < w; j++) {
+			cout << to_format(img[i*w + j]) << " ";
+		}
+		cout << endl;
+	}
+	cout << endl;
+}
+
+int main(int argc, char **argv){
+
+	
+	int w = atoi(argv[1]);
+	int h = atoi(argv[2]);
+	int fw = 3;
+	int fh = 3;
+
+	float *img_in = new float[w*h];
+	float *img_out = new float[w*h];
+	float *img_fin = new float[fw*fh];
+
+	time_t t;
+	srand((unsigned) time(&t));
+
+	//Load value to the image
+	for (int i = 0; i < h; i++)
+		for (int j = 0; j < w; j++)
+			img_in[i*w + j] =rand() % 10 ;
+
+	// Load value to filter
+	for(int i = 0; i < fh; i++)
+		for(int j = 0; j < fw; j++)
+			img_fin[i*fw + j] = rand() % 10;
+
+	printImage(img_fin, fw, fh);
+	printImage(img_in, w, h);
+
+	imgMul(img_in, img_out, w, h, img_fin, fw, fh);
+
+	printImage(img_out, w, h);
+
+	return 0;
+}
