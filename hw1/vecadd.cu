@@ -108,12 +108,16 @@ int main(int argc, char **argv){
 	for(int i = 0; i < fh; i++)
 		for(int j = 0; j < fw; j++)
 			img_fin[i*fw + j] = rand() % 10;
-
+	
+	cout << "Filter Array" << endl;
 	printImage(img_fin, fw, fh);
+
+	cout << "Input Array" << endl;
 	printImage(img_in, w, h);
 
 	imgMul(img_in, img_out, w, h, img_fin, fw, fh);
-
+	
+	cout << "Output Array" << endl;
 	printImage(img_out, w, h);
 
 	return 0;
