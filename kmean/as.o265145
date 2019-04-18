@@ -1,0 +1,28 @@
+setting dmc scratch directory
+ 
+============================================================
+=====         Summary of your script job               =====
+============================================================
+  The script file is: vadd_cu.scr
+  The time limit is 01:00:00 HH:MM:SS.
+  The target directory is: /home/aumcls01/spenkay/kmean
+  The working directory is:  /scratch-local/aumcls01.as.265145
+  The memory limit is: 1gb
+  The job will start running after: 2019-04-18T13:27:50
+  Job Name: as
+  Virtual queue: gpu
+  QOS: --qos=gpu
+  Constraints: 
+  Using  1  cores on master node  dmc4
+  Node list:  dmc4
+  Nodes:  dmc4
+  Command typed:
+/apps/scripts/run_gpu vadd_cu.scr     
+  Queue submit command:
+sbatch --qos=gpu -J as --begin=2019-04-18T13:27:50 --requeue --mail-user=spenkay@aum.edu -o as.o265145 -t 01:00:00 --gres=gpu:1 -N 1-1 -n 1 --mem-per-cpu=1000mb   
+ 
+Assigning GPU 1 to this job.
+CX[0]=-0.18296, CY[0]=0.0606634, Radius[i]=1.04423
+CX[1]=-2.06816, CY[1]=0.0137737, Radius[i]=0.523017
+CX[2]=0.606022, CY[2]=0.97959, Radius[i]=0.295428
+BREAK=1
