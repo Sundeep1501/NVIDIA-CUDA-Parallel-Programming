@@ -6,14 +6,14 @@
   The time limit is 01:00:00 HH:MM:SS.
   The target directory is: /home/aumcls01/spenkay/kmean
   The memory limit is: 1gb
-  The job will start running after: 2019-04-18T13:27:50
-  Job Name: as
+  The job will start running after: 2019-04-21T10:16:29
+  Job Name: ds
   Virtual queue: gpu
   QOS: --qos=gpu
   Constraints: 
   Command typed:
 /apps/scripts/run_gpu vadd_cu.scr     
   Queue submit command:
-sbatch --qos=gpu -J as --begin=2019-04-18T13:27:50 --requeue --mail-user=spenkay@aum.edu -o as.o$SLURM_JOB_ID -t 01:00:00 --gres=gpu:1 -N 1-1 -n 1 --mem-per-cpu=1000mb   
-  Job number: 265145
+sbatch --qos=gpu -J ds --begin=2019-04-21T10:16:29 --requeue --mail-user=spenkay@aum.edu -o ds.o$SLURM_JOB_ID -t 01:00:00 --gres=gpu:1 -N 1-1 -n 1 --mem-per-cpu=1000mb   
+  Job number: 266369
  

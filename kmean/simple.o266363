@@ -6,10 +6,10 @@ setting dmc scratch directory
   The script file is: vadd_cu.scr
   The time limit is 01:00:00 HH:MM:SS.
   The target directory is: /home/aumcls01/spenkay/kmean
-  The working directory is:  /scratch-local/aumcls01.qw.265150
+  The working directory is:  /scratch-local/aumcls01.simple.266363
   The memory limit is: 1gb
-  The job will start running after: 2019-04-18T13:35:25
-  Job Name: qw
+  The job will start running after: 2019-04-21T09:58:52
+  Job Name: simple
   Virtual queue: gpu
   QOS: --qos=gpu
   Constraints: 
@@ -19,9 +19,9 @@ setting dmc scratch directory
   Command typed:
 /apps/scripts/run_gpu vadd_cu.scr     
   Queue submit command:
-sbatch --qos=gpu -J qw --begin=2019-04-18T13:35:25 --requeue --mail-user=spenkay@aum.edu -o qw.o265150 -t 01:00:00 --gres=gpu:1 -N 1-1 -n 1 --mem-per-cpu=1000mb   
+sbatch --qos=gpu -J simple --begin=2019-04-21T09:58:52 --requeue --mail-user=spenkay@aum.edu -o simple.o266363 -t 01:00:00 --gres=gpu:1 -N 1-1 -n 1 --mem-per-cpu=1000mb   
  
 Assigning GPU 1 to this job.
-CX[0]=3, CY[0]=3, Radius[i]=1.41421
-CX[1]=7.5, CY[1]=5.5, Radius[i]=0.707107
+CX[0]=3, CY[0]=3, Radius[0]=1.41421
+CX[1]=7.5, CY[1]=5.5, Radius[1]=0.707107
 BREAK=1
